@@ -10,81 +10,72 @@
     body { 
       margin: 0; 
       overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f0f2f5;
     }
     #overlay {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1;
-      text-align: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     #start-button {
-      padding: 16px 32px;
-      font-size: 20px;
-      background: rgba(64, 123, 255, 0.8);
+      padding: 15px 28px;
+      font-size: 18px;
+      background: #4876FF;
       color: white;
       border: none;
-      border-radius: 50px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(72, 118, 255, 0.4);
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       font-weight: 600;
-      letter-spacing: 0.5px;
     }
     #start-button:hover {
-      background: rgba(64, 123, 255, 1);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.4);
-    }
-    #title {
-      color: white;
-      font-size: 28px;
-      margin-bottom: 30px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(72, 118, 255, 0.5);
     }
     #status {
       position: fixed;
       bottom: 40px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(30, 30, 60, 0.85);
+      background: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 14px 24px;
-      border-radius: 24px;
+      padding: 12px 24px;
+      border-radius: 12px;
       font-size: 16px;
       font-weight: 500;
       margin: 0;
-      backdrop-filter: blur(5px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       max-width: 80%;
       text-align: center;
       display: none;
       z-index: 1000;
-      border: 1px solid rgba(255,255,255,0.1);
     }
     .exit-ar {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.5);
       color: white;
       border: none;
       border-radius: 50%;
-      width: 56px;
-      height: 56px;
-      display: flex;
+      width: 46px;
+      height: 46px;
+      display: none;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 24px;
       cursor: pointer;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       z-index: 1000;
-      display: none;
-      border: 1px solid rgba(255,255,255,0.1);
     }
     .xr-active .exit-ar {
       display: flex;
@@ -93,8 +84,7 @@
 </head>
 <body>
   <div id="overlay">
-    <h1 id="title">VR Dialog Experience</h1>
-    <button id="start-button">Start Demo</button>
+    <button id="start-button">Start Dialog Demo</button>
   </div>
   
   <button class="exit-ar" id="exit-ar">×</button>
@@ -103,7 +93,7 @@
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
 
-    // Variables for XR
+    // Main variables
     let camera, scene, renderer;
     let controllers = [];
     let xrSession = null;
@@ -112,12 +102,9 @@
     
     // Initialize WebXR components
     function init() {
-      // Scene setup
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x16213e);
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
-      // Renderer setup
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
@@ -126,16 +113,12 @@
       document.body.appendChild(renderer.domElement);
 
       // Lighting
-      const ambientLight = new THREE.AmbientLight(0x404040, 2.5);
-      scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.8);
+      scene.add(new THREE.AmbientLight(0x404040, 2));
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
       directionalLight.position.set(1, 1, 1);
       directionalLight.castShadow = true;
       scene.add(directionalLight);
-      
-      // Add a subtle environment for better immersion
-      addEnvironment();
       
       // Setup for interaction
       raycaster = new THREE.Raycaster();
@@ -144,35 +127,10 @@
       // Create dialog system
       dialogSystem = new DialogSystem();
       
-      // Handle window resize
+      // Event listeners
       window.addEventListener('resize', onWindowResize);
-
-      // Set up event listeners
       document.getElementById('start-button').addEventListener('click', startARSession);
       document.getElementById('exit-ar').addEventListener('click', endARSession);
-    }
-    
-    function addEnvironment() {
-      // Add a subtle environment - distant stars
-      const stars = new THREE.Group();
-      const starGeometry = new THREE.SphereGeometry(0.01, 8, 8);
-      const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      
-      // Create 100 random stars
-      for (let i = 0; i < 100; i++) {
-        const star = new THREE.Mesh(starGeometry, starMaterial);
-        // Random position far away
-        star.position.set(
-          (Math.random() - 0.5) * 20,
-          (Math.random() - 0.5) * 20,
-          (Math.random() - 0.5) * 20
-        );
-        // Ensure stars are far away
-        star.position.normalize().multiplyScalar(10 + Math.random() * 5);
-        stars.add(star);
-      }
-      
-      scene.add(stars);
     }
 
     // Start AR session
@@ -182,99 +140,92 @@
         return;
       }
       
-      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-        if (supported) {
-          const sessionInit = { 
-            requiredFeatures: ['hit-test'],
-            optionalFeatures: ['dom-overlay', 'hand-tracking'], 
-            domOverlay: { root: document.body } 
-          };
-          
-          navigator.xr.requestSession('immersive-ar', sessionInit).then(onSessionStarted);
-        } else {
-          // Try VR if AR isn't supported (for development or desktop testing)
-          navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
-            if (vrSupported) {
-              updateStatus('AR not supported, falling back to VR mode');
-              navigator.xr.requestSession('immersive-vr').then(onSessionStarted);
-            } else {
-              updateStatus('WebXR is not supported on this device.');
-            }
-          });
-        }
-      });
+      navigator.xr.isSessionSupported('immersive-ar')
+        .then((supported) => {
+          if (supported) {
+            const sessionInit = { 
+              requiredFeatures: ['hit-test'],
+              optionalFeatures: ['dom-overlay', 'hand-tracking'], 
+              domOverlay: { root: document.body } 
+            };
+            
+            navigator.xr.requestSession('immersive-ar', sessionInit)
+              .then(onSessionStarted)
+              .catch(err => updateStatus('Failed to start AR session: ' + err.message));
+          } else {
+            updateStatus('WebXR AR session is not supported on this device.');
+          }
+        })
+        .catch(err => updateStatus('Error checking WebXR support: ' + err.message));
     }
 
     // Handle AR session start
     function onSessionStarted(session) {
       xrSession = session;
       
-      // Hide start button
-      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('start-button').style.display = 'none';
+      document.body.classList.add('xr-active');
       
-      // Set up XR scene
       renderer.xr.setReferenceSpaceType('local');
       renderer.xr.setSession(session);
       
-      // Add XR active class to body
-      document.body.classList.add('xr-active');
+      // Set up controllers and input
+      controllers = [0, 1].map(i => {
+        const controller = renderer.xr.getController(i);
+        controller.userData.id = i;
+        controller.userData.isSelecting = false;
+        
+        // Visual indicator for hand
+        const handGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+        const handMaterial = new THREE.MeshStandardMaterial({
+          color: i === 0 ? 0x4876FF : 0xFF4848,
+          roughness: 0.3,
+          metalness: 0.5,
+          transparent: true,
+          opacity: 0.7
+        });
+        
+        controller.add(new THREE.Mesh(handGeometry, handMaterial));
+        controller.addEventListener('selectstart', onControllerSelectStart);
+        controller.addEventListener('selectend', onControllerSelectEnd);
+        
+        scene.add(controller);
+        return controller;
+      });
       
-      // Set up controllers
-      setupControllers(session);
-      
-      // Initialize dialog system in the scene
+      // Initialize dialog system and start animation
       dialogSystem.init(scene, camera);
       
-      // Start dialog sequence after a short delay
-      setTimeout(() => {
-        dialogSystem.startDialogSequence();
-      }, 1500);
+      setTimeout(() => dialogSystem.startDialogSequence(), 1500);
       
-      // Start animation loop
       renderer.setAnimationLoop(render);
-      
-      // Handle session end
       session.addEventListener('end', onSessionEnd);
       
-      updateStatus('Dialog system initialized! Point at buttons to interact.');
+      updateStatus('Dialog system ready! Tap the next button to advance.');
     }
     
     // End AR session
     function endARSession() {
-      if (xrSession) {
-        xrSession.end();
-      }
+      if (xrSession) xrSession.end();
     }
     
     function onSessionEnd() {
-      // Remove XR active class from body
       document.body.classList.remove('xr-active');
-      
-      // Show start button again
-      document.getElementById('overlay').style.display = 'block';
-      
-      // Clear status
+      document.getElementById('start-button').style.display = 'block';
       document.getElementById('status').style.display = 'none';
       
-      // Reset state
+      // Reset everything
       controllers = [];
-      
-      // Stop animation loop
       renderer.setAnimationLoop(null);
       xrSession = null;
       
-      // Clear scene
-      clearScene();
-    }
-    
-    function clearScene() {
-      // Remove all objects from scene
+      // Clean up scene
       while(scene.children.length > 0) { 
         const object = scene.children[0];
         if (object.geometry) object.geometry.dispose();
         if (object.material) {
           if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
+            object.material.forEach(m => m.dispose());
           } else {
             object.material.dispose();
           }
@@ -282,145 +233,60 @@
         scene.remove(object); 
       }
     }
-
-    function setupControllers(session) {
-      // Set up controllers
-      for (let i = 0; i < 2; i++) {
-        const controller = renderer.xr.getController(i);
-        controller.userData.id = i;
-        controller.userData.isSelecting = false;
-        scene.add(controller);
-        
-        // Add improved hand visuals
-        addHandVisual(controller, i === 0 ? 0x407bff : 0xff5e7d);
-        
-        // Add events
-        controller.addEventListener('selectstart', onControllerSelectStart);
-        controller.addEventListener('selectend', onControllerSelectEnd);
-        
-        controllers.push(controller);
-      }
-    }
-    
-    function addHandVisual(controller, color) {
-      // Create a hand group
-      const handGroup = new THREE.Group();
-      controller.add(handGroup);
-      
-      // Main hand sphere
-      const handGeometry = new THREE.SphereGeometry(0.02, 16, 16);
-      const handMaterial = new THREE.MeshStandardMaterial({
-        color: color,
-        roughness: 0.3,
-        metalness: 0.7,
-        transparent: true,
-        opacity: 0.85
-      });
-      const handMesh = new THREE.Mesh(handGeometry, handMaterial);
-      handGroup.add(handMesh);
-      
-      // Add pointer beam
-      const beamGeometry = new THREE.CylinderGeometry(0.001, 0.001, 0.2, 8);
-      beamGeometry.rotateX(Math.PI / 2);
-      beamGeometry.translate(0, 0, -0.1);
-      const beamMaterial = new THREE.MeshBasicMaterial({
-        color: color,
-        transparent: true,
-        opacity: 0.6
-      });
-      const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-      handGroup.add(beam);
-      
-      // Add point light to the controller
-      const light = new THREE.PointLight(color, 0.5, 0.2);
-      handGroup.add(light);
-    }
     
     function onControllerSelectStart(event) {
       const controller = event.target;
       controller.userData.isSelecting = true;
       
-      // Check for interaction with dialog buttons
-      checkDialogInteraction(controller);
-    }
-    
-    function onControllerSelectEnd(event) {
-      const controller = event.target;
-      controller.userData.isSelecting = false;
-    }
-    
-    function checkDialogInteraction(controller) {
       // Use raycaster to check interaction with dialog elements
       tempMatrix.identity().extractRotation(controller.matrixWorld);
       raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
       raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
       
-      // Get interactive objects from dialog system
       const interactiveObjects = dialogSystem.getInteractiveObjects();
-      
       const intersects = raycaster.intersectObjects(interactiveObjects, true);
       
       if (intersects.length > 0) {
-        const object = findInteractiveParent(intersects[0].object);
-        if (object && object.userData.onClick) {
-          // Visual feedback
-          object.scale.set(1.1, 1.1, 1.1);
-          setTimeout(() => {
-            object.scale.set(1, 1, 1);
-          }, 150);
-          
-          // Execute click handler
-          object.userData.onClick();
-        }
-      }
-    }
-    
-    function findInteractiveParent(object) {
-      // Find the first parent object with an onClick function
-      let current = object;
-      
-      while (current) {
-        if (current.userData && current.userData.onClick) {
-          return current;
-        }
-        current = current.parent;
-      }
-      
-      return null;
-    }
-    
-    function render(timestamp, frame) {
-      // Update dialog system
-      if (dialogSystem) {
-        dialogSystem.update();
-      }
-      
-      // Check controller interaction - continuous checking for better responsiveness
-      controllers.forEach(controller => {
-        // Add subtle controller beam animation
-        const beam = controller.children[0]?.children[1];
-        if (beam) {
-          beam.material.opacity = 0.3 + Math.sin(timestamp / 500) * 0.2;
-        }
-        
-        // Show highlight when pointing at interactive elements
-        tempMatrix.identity().extractRotation(controller.matrixWorld);
-        raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-        raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-        
-        const interactiveObjects = dialogSystem?.getInteractiveObjects() || [];
-        const intersects = raycaster.intersectObjects(interactiveObjects, true);
-        
-        if (intersects.length > 0) {
-          const object = findInteractiveParent(intersects[0].object);
-          if (object) {
-            object.userData.isHovered = true;
+        // Find interactive parent
+        let current = intersects[0].object;
+        while (current) {
+          if (current.userData && current.userData.onClick) {
+            current.userData.onClick();
+            break;
           }
+          current = current.parent;
         }
-        
-        // Check for active selection
+      }
+    }
+    
+    function onControllerSelectEnd(event) {
+      event.target.userData.isSelecting = false;
+    }
+    
+    function render() {
+      // Update dialog system
+      if (dialogSystem) dialogSystem.update(camera);
+      
+      // Check controller interaction
+      controllers.forEach(controller => {
         if (controller.userData.isSelecting) {
-          checkDialogInteraction(controller);
+          // Use raycaster to check interaction with dialog elements
+          tempMatrix.identity().extractRotation(controller.matrixWorld);
+          raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+          raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+          
+          const interactiveObjects = dialogSystem.getInteractiveObjects();
+          const intersects = raycaster.intersectObjects(interactiveObjects, true);
+          
+          if (intersects.length > 0) {
+            // Visual feedback on hover
+            const object = intersects[0].object;
+            if (object.material && !object.userData.isHovered) {
+              object.userData.originalColor = object.material.color.clone();
+              object.material.color.multiplyScalar(1.2);
+              object.userData.isHovered = true;
+            }
+          }
         }
       });
       
@@ -442,15 +308,15 @@
       statusElement.textContent = message;
       statusElement.style.display = 'block';
       
-      // Auto-hide after 5 seconds for non-error messages
+      // Auto-hide after 4 seconds for non-error messages
       if (!message.includes('error') && !message.includes('not supported')) {
         setTimeout(() => {
           statusElement.style.display = 'none';
-        }, 5000);
+        }, 4000);
       }
     }
     
-    // Dialog System Class
+    // Dialog System Class - Simplified
     class DialogSystem {
       constructor() {
         this.dialogPanel = null;
@@ -458,126 +324,105 @@
         this.isActive = false;
         this.nextButton = null;
         this.portraitMesh = null;
-        this.textMesh = null;
-        this.nameMesh = null;
+        this.textElement = null;
+        this.nameElement = null;
         this.dialogGroup = null;
-        this.textRevealProgress = 0;
-        this.textRevealSpeed = 0.05;
-        this.isAnimatingText = false;
-        this.fullDialogText = "";
         
-        // Dialog content - dialog between hero and enemy
+        // Dialog content
         this.dialogSequence = [
           {
             speaker: "Hero",
-            portrait: "hero-portrait.jpg",
             message: "I've finally found you! Your reign of terror ends today!",
-            color: "#407bff"
+            color: "#4876FF"
           },
           {
             speaker: "Enemy",
-            portrait: "enemy-portrait.jpg",
             message: "Ah, the so-called hero arrives. Do you really think you can defeat me?",
-            color: "#ff5e7d"
+            color: "#FF4848"
           },
           {
             speaker: "Hero",
-            portrait: "hero-portrait.jpg",
             message: "I've trained my whole life for this moment. I won't fail!",
-            color: "#407bff"
+            color: "#4876FF"
           },
           {
             speaker: "Enemy",
-            portrait: "enemy-portrait.jpg",
             message: "Such confidence! Let's see if you can back it up with skill.",
-            color: "#ff5e7d"
+            color: "#FF4848"
           },
           {
             speaker: "Hero",
-            portrait: "hero-portrait.jpg",
             message: "Enough talk. Prepare yourself!",
-            color: "#407bff"
+            color: "#4876FF"
           }
         ];
         
         // Create textures
-        this.heroTexture = null;
-        this.enemyTexture = null;
-        
-        // Load the portrait textures
-        this.loadTextures();
+        this.createTextures();
       }
       
-      loadTextures() {
-        const textureLoader = new THREE.TextureLoader();
+      createTextures() {
+        // Hero texture
+        const heroCanvas = document.createElement('canvas');
+        heroCanvas.width = 256;
+        heroCanvas.height = 256;
+        const heroCtx = heroCanvas.getContext('2d');
         
-        // Create placeholder hero texture
-        const canvas1 = document.createElement('canvas');
-        canvas1.width = 256;
-        canvas1.height = 256;
-        const ctx1 = canvas1.getContext('2d');
+        // Background gradient for hero
+        const heroGradient = heroCtx.createLinearGradient(0, 0, 0, 256);
+        heroGradient.addColorStop(0, '#4876FF');
+        heroGradient.addColorStop(1, '#3366DD');
+        heroCtx.fillStyle = heroGradient;
+        heroCtx.fillRect(0, 0, 256, 256);
         
-        // Create a gradient background
-        const gradient1 = ctx1.createLinearGradient(0, 0, 256, 256);
-        gradient1.addColorStop(0, '#1e3a8a');
-        gradient1.addColorStop(1, '#407bff');
-        ctx1.fillStyle = gradient1;
-        ctx1.fillRect(0, 0, 256, 256);
+        // Add a simple avatar shape
+        heroCtx.fillStyle = 'white';
+        heroCtx.beginPath();
+        heroCtx.arc(128, 110, 60, 0, 2 * Math.PI);
+        heroCtx.fill();
         
-        // Add a circular mask
-        ctx1.globalCompositeOperation = 'destination-in';
-        ctx1.beginPath();
-        ctx1.arc(128, 128, 120, 0, Math.PI * 2);
-        ctx1.fill();
+        heroCtx.fillStyle = '#4876FF';
+        heroCtx.beginPath();
+        heroCtx.arc(128, 90, 30, 0, 2 * Math.PI);
+        heroCtx.fill();
         
-        // Add a face shape
-        ctx1.globalCompositeOperation = 'source-over';
-        ctx1.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx1.beginPath();
-        ctx1.arc(128, 110, 60, 0, Math.PI * 2);
-        ctx1.fill();
+        heroCtx.font = 'bold 40px sans-serif';
+        heroCtx.textAlign = 'center';
+        heroCtx.fillStyle = 'white';
+        heroCtx.fillText('HERO', 128, 200);
         
-        // Add text
-        ctx1.fillStyle = 'white';
-        ctx1.font = 'bold 40px Arial';
-        ctx1.textAlign = 'center';
-        ctx1.fillText('HERO', 128, 128);
+        this.heroTexture = new THREE.CanvasTexture(heroCanvas);
         
-        this.heroTexture = new THREE.CanvasTexture(canvas1);
+        // Enemy texture
+        const enemyCanvas = document.createElement('canvas');
+        enemyCanvas.width = 256;
+        enemyCanvas.height = 256;
+        const enemyCtx = enemyCanvas.getContext('2d');
         
-        // Create placeholder enemy texture
-        const canvas2 = document.createElement('canvas');
-        canvas2.width = 256;
-        canvas2.height = 256;
-        const ctx2 = canvas2.getContext('2d');
+        // Background gradient for enemy
+        const enemyGradient = enemyCtx.createLinearGradient(0, 0, 0, 256);
+        enemyGradient.addColorStop(0, '#FF4848');
+        enemyGradient.addColorStop(1, '#CC3333');
+        enemyCtx.fillStyle = enemyGradient;
+        enemyCtx.fillRect(0, 0, 256, 256);
         
-        // Create a gradient background
-        const gradient2 = ctx2.createLinearGradient(0, 0, 256, 256);
-        gradient2.addColorStop(0, '#881337');
-        gradient2.addColorStop(1, '#ff5e7d');
-        ctx2.fillStyle = gradient2;
-        ctx2.fillRect(0, 0, 256, 256);
+        // Add a simple avatar shape
+        enemyCtx.fillStyle = 'white';
+        enemyCtx.beginPath();
+        enemyCtx.arc(128, 110, 60, 0, 2 * Math.PI);
+        enemyCtx.fill();
         
-        // Add a circular mask
-        ctx2.globalCompositeOperation = 'destination-in';
-        ctx2.beginPath();
-        ctx2.arc(128, 128, 120, 0, Math.PI * 2);
-        ctx2.fill();
+        enemyCtx.fillStyle = '#FF4848';
+        enemyCtx.beginPath();
+        enemyCtx.arc(128, 90, 30, 0, 2 * Math.PI);
+        enemyCtx.fill();
         
-        // Add a face shape
-        ctx2.globalCompositeOperation = 'source-over';
-        ctx2.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx2.beginPath();
-        ctx2.arc(128, 110, 60, 0, Math.PI * 2);
-        ctx2.fill();
+        enemyCtx.font = 'bold 40px sans-serif';
+        enemyCtx.textAlign = 'center';
+        enemyCtx.fillStyle = 'white';
+        enemyCtx.fillText('ENEMY', 128, 200);
         
-        // Add text
-        ctx2.fillStyle = 'white';
-        ctx2.font = 'bold 40px Arial';
-        ctx2.textAlign = 'center';
-        ctx2.fillText('ENEMY', 128, 128);
-        
-        this.enemyTexture = new THREE.CanvasTexture(canvas2);
+        this.enemyTexture = new THREE.CanvasTexture(enemyCanvas);
       }
       
       init(scene, camera) {
@@ -586,7 +431,7 @@
         
         // Create dialog group
         this.dialogGroup = new THREE.Group();
-        this.dialogGroup.position.set(0, 0, -0.7); // Positioned in front of user
+        this.dialogGroup.position.set(0, 0, -0.6);
         this.scene.add(this.dialogGroup);
         
         // Create dialog panel
@@ -597,127 +442,29 @@
         // Main panel group
         const panel = new THREE.Group();
         
-        // Background panel - now with rounded corners via multiple meshes
-        const panelWidth = 0.7;
-        const panelHeight = 0.35;
-        const cornerRadius = 0.04;
+        const panelWidth = 0.6;
+        const panelHeight = 0.3;
         
-        // Create panel background with fancy glass effect
-        const panelGeo = this.createRoundedRectGeometry(panelWidth, panelHeight, cornerRadius);
-        const panelMat = new THREE.MeshPhysicalMaterial({
-          color: 0x000000,
-          metalness: 0.2,
-          roughness: 0.1,
-          transparent: true,
-          opacity: 0.7,
-          side: THREE.DoubleSide,
-          envMapIntensity: 1.0
-        });
-        const panelMesh = new THREE.Mesh(panelGeo, panelMat);
-        panel.add(panelMesh);
+        // Background panel with rounded corners and better visual
+        this.createPanelBackground(panel, panelWidth, panelHeight);
         
-        // Add subtle outer glow
-        const glowGeo = this.createRoundedRectGeometry(panelWidth + 0.01, panelHeight + 0.01, cornerRadius + 0.005);
-        const glowMat = new THREE.MeshBasicMaterial({
-          color: 0x2a4ba0,
-          transparent: true,
-          opacity: 0.3,
-          side: THREE.DoubleSide
-        });
-        const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-        glowMesh.position.z = -0.001;
-        panel.add(glowMesh);
-        
-        // Portrait area with improved styling
-        const portraitSize = 0.16;
-        const portraitGeo = new THREE.CircleGeometry(portraitSize/2, 32);
-        const portraitMat = new THREE.MeshBasicMaterial({
+        // Portrait area
+        const portraitSize = 0.15;
+        const portraitGeometry = new THREE.PlaneGeometry(portraitSize, portraitSize);
+        const portraitMaterial = new THREE.MeshBasicMaterial({
           map: this.heroTexture,
-          side: THREE.DoubleSide
+          transparent: true
         });
-        this.portraitMesh = new THREE.Mesh(portraitGeo, portraitMat);
-        this.portraitMesh.position.set(-(panelWidth/2) + portraitSize/2 + 0.035, 0.03, 0.001);
+        this.portraitMesh = new THREE.Mesh(portraitGeometry, portraitMaterial);
+        this.portraitMesh.position.set(-(panelWidth/2) + portraitSize/2 + 0.025, 0.04, 0.001);
         panel.add(this.portraitMesh);
         
-        // Add portrait border
-        const borderGeo = new THREE.RingGeometry(portraitSize/2, portraitSize/2 + 0.008, 32);
-        const borderMat = new THREE.MeshBasicMaterial({
-          color: 0x407bff,
-          transparent: true,
-          opacity: 0.9,
-          side: THREE.DoubleSide
-        });
-        this.portraitBorder = new THREE.Mesh(borderGeo, borderMat);
-        this.portraitBorder.position.copy(this.portraitMesh.position);
-        this.portraitBorder.position.z = 0.0005;
-        panel.add(this.portraitBorder);
+        // Create name and text elements using dynamic canvases
+        this.createNameElement(panel, portraitSize, panelWidth);
+        this.createTextElement(panel, panelWidth, panelHeight);
         
-        // Name plate with improved styling
-        const namePlateWidth = portraitSize;
-        const namePlateHeight = 0.042;
-        const namePlateGeo = this.createRoundedRectGeometry(namePlateWidth, namePlateHeight, 0.015);
-        const namePlateMat = new THREE.MeshBasicMaterial({
-          color: 0x407bff,
-          transparent: true,
-          opacity: 0.95,
-          side: THREE.DoubleSide
-        });
-        this.namePlate = new THREE.Mesh(namePlateGeo, namePlateMat);
-        this.namePlate.position.set(-(panelWidth/2) + portraitSize/2 + 0.035, -(portraitSize/2) - 0.025, 0.001);
-        panel.add(this.namePlate);
-        
-        // Name text with improved rendering
-        this.nameMesh = this.createTextMesh("Hero", 0.025, 0xffffff, 128, 48);
-        this.nameMesh.position.copy(this.namePlate.position);
-        this.nameMesh.position.z = 0.002;
-        panel.add(this.nameMesh);
-        
-        // Text area with improved styling
-        this.textMesh = this.createTextMesh("Dialog text will appear here...", 0.02, 0xffffff, 512, 256);
-        this.textMesh.position.set(0.06, 0.03, 0.001);
-        panel.add(this.textMesh);
-        
-        // Next button with improved styling
-        const buttonSize = 0.04;
-        const buttonGeo = new THREE.CircleGeometry(buttonSize, 32);
-        const buttonMat = new THREE.MeshPhysicalMaterial({
-          color: 0x407bff,
-          metalness: 0.7,
-          roughness: 0.3,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.95
-        });
-        this.nextButton = new THREE.Mesh(buttonGeo, buttonMat);
-        this.nextButton.position.set((panelWidth/2) - 0.06, -(panelHeight/2) + 0.06, 0.001);
-        
-        // Make button interactive
-        this.nextButton.userData.onClick = () => {
-          // If still animating text, complete it immediately
-          if (this.isAnimatingText) {
-            this.completeTextAnimation();
-          } else {
-            this.showNextDialog();
-          }
-        };
-        
-        // Arrow shape inside button
-        const arrowShape = new THREE.Shape();
-        arrowShape.moveTo(-0.012, -0.01);
-        arrowShape.lineTo(0.012, 0);
-        arrowShape.lineTo(-0.012, 0.01);
-        arrowShape.lineTo(-0.008, 0);
-        arrowShape.lineTo(-0.008, -0.0);
-        arrowShape.lineTo(-0.012, -0.01);
-        const arrowGeo = new THREE.ShapeGeometry(arrowShape);
-        const arrowMat = new THREE.MeshBasicMaterial({
-          color: 0xffffff,
-          side: THREE.DoubleSide
-        });
-        const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-        arrow.rotation.z = Math.PI / 2;
-        this.nextButton.add(arrow);
-        panel.add(this.nextButton);
+        // Next button - improved visual
+        this.createNextButton(panel, panelWidth, panelHeight);
         
         // Add to dialog group
         this.dialogGroup.add(panel);
@@ -725,130 +472,224 @@
         this.dialogPanel.visible = false;
       }
       
-      createRoundedRectGeometry(width, height, radius) {
-        // Create a rounded rectangle shape
-        const shape = new THREE.Shape();
-        
-        const x = -width / 2;
-        const y = -height / 2;
-        
-        shape.moveTo(x + radius, y);
-        shape.lineTo(x + width - radius, y);
-        shape.quadraticCurveTo(x + width, y, x + width, y + radius);
-        shape.lineTo(x + width, y + height - radius);
-        shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-        shape.lineTo(x + radius, y + height);
-        shape.quadraticCurveTo(x, y + height, x, y + height - radius);
-        shape.lineTo(x, y + radius);
-        shape.quadraticCurveTo(x, y, x + radius, y);
-        
-        return new THREE.ShapeGeometry(shape);
-      }
-      
-      createTextMesh(text, size, color, width = 512, height = 256) {
-        // Create canvas for text rendering
+      createPanelBackground(panel, width, height) {
+        // Main background with rounded corners using a canvas
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
         
-        // Set font and color
-        context.font = 'normal 28px Arial';
-        context.fillStyle = '#ffffff';
-        context.textBaseline = 'top';
+        // Draw rounded rectangle
+        const cornerRadius = 32;
+        ctx.fillStyle = 'rgba(10, 12, 16, 0.85)';
+        ctx.beginPath();
+        ctx.moveTo(cornerRadius, 0);
+        ctx.lineTo(canvas.width - cornerRadius, 0);
+        ctx.quadraticCurveTo(canvas.width, 0, canvas.width, cornerRadius);
+        ctx.lineTo(canvas.width, canvas.height - cornerRadius);
+        ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - cornerRadius, canvas.height);
+        ctx.lineTo(cornerRadius, canvas.height);
+        ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - cornerRadius);
+        ctx.lineTo(0, cornerRadius);
+        ctx.quadraticCurveTo(0, 0, cornerRadius, 0);
+        ctx.closePath();
+        ctx.fill();
         
-        // Clear canvas
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        // Add subtle border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         
-        // Draw text with word wrap
-        this.wrapText(context, text, 10, 10, canvas.width - 20, 32);
-        
-        // Create texture from canvas
         const texture = new THREE.CanvasTexture(canvas);
-        texture.needsUpdate = true;
-        
-        // Create mesh with appropriate aspect ratio
-        const aspectRatio = width / height;
-        const geometry = new THREE.PlaneGeometry(size * aspectRatio, size);
+        const geometry = new THREE.PlaneGeometry(width, height);
         const material = new THREE.MeshBasicMaterial({
           map: texture,
           transparent: true,
           side: THREE.DoubleSide
         });
         
-        return new THREE.Mesh(geometry, material);
+        panel.add(new THREE.Mesh(geometry, material));
       }
       
-      wrapText(context, text, x, y, maxWidth, lineHeight) {
-        const words = text.split(' ');
-        let line = '';
-        let lineY = y;
+      createNameElement(panel, portraitSize, panelWidth) {
+        // Create name background
+        const nameCanvas = document.createElement('canvas');
+        nameCanvas.width = 256;
+        nameCanvas.height = 64;
+        const nameCtx = nameCanvas.getContext('2d');
         
-        for (let i = 0; i < words.length; i++) {
-          const testLine = line + words[i] + ' ';
-          const metrics = context.measureText(testLine);
-          const testWidth = metrics.width;
+        // Drawing functions for name element
+        const drawName = (ctx, name, color) => {
+          // Clear canvas
+          ctx.clearRect(0, 0, nameCanvas.width, nameCanvas.height);
           
-          if (testWidth > maxWidth && i > 0) {
-            context.fillText(line, x, lineY);
-            line = words[i] + ' ';
-            lineY += lineHeight;
-          } else {
-            line = testLine;
+          // Draw rounded rectangle background
+          const cornerRadius = 12;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(cornerRadius, 0);
+          ctx.lineTo(nameCanvas.width - cornerRadius, 0);
+          ctx.quadraticCurveTo(nameCanvas.width, 0, nameCanvas.width, cornerRadius);
+          ctx.lineTo(nameCanvas.width, nameCanvas.height - cornerRadius);
+          ctx.quadraticCurveTo(nameCanvas.width, nameCanvas.height, nameCanvas.width - cornerRadius, nameCanvas.height);
+          ctx.lineTo(cornerRadius, nameCanvas.height);
+          ctx.quadraticCurveTo(0, nameCanvas.height, 0, nameCanvas.height - cornerRadius);
+          ctx.lineTo(0, cornerRadius);
+          ctx.quadraticCurveTo(0, 0, cornerRadius, 0);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Add text
+          ctx.font = 'bold 32px sans-serif';
+          ctx.fillStyle = 'white';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(name, nameCanvas.width / 2, nameCanvas.height / 2);
+        };
+        
+        // Initial drawing
+        drawName(nameCtx, "Hero", "#4876FF");
+        
+        const nameTexture = new THREE.CanvasTexture(nameCanvas);
+        const nameGeometry = new THREE.PlaneGeometry(portraitSize, 0.04);
+        const nameMaterial = new THREE.MeshBasicMaterial({
+          map: nameTexture, 
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+        
+        this.nameElement = new THREE.Mesh(nameGeometry, nameMaterial);
+        this.nameElement.position.set(-(panelWidth/2) + portraitSize/2 + 0.025, -(portraitSize/2) - 0.01, 0.001);
+        this.nameElement.userData.updateName = (name, color) => {
+          drawName(nameCtx, name, color);
+          nameTexture.needsUpdate = true;
+        };
+        
+        panel.add(this.nameElement);
+      }
+      
+      createTextElement(panel, panelWidth, panelHeight) {
+        // Create text canvas
+        const textCanvas = document.createElement('canvas');
+        textCanvas.width = 640;
+        textCanvas.height = 256;
+        const textCtx = textCanvas.getContext('2d');
+        
+        // Drawing function for text
+        const drawText = (ctx, text) => {
+          // Clear canvas
+          ctx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+          
+          // Set text style
+          ctx.font = '24px sans-serif';
+          ctx.fillStyle = 'white';
+          ctx.textBaseline = 'top';
+          
+          // Word wrap
+          const words = text.split(' ');
+          const maxWidth = textCanvas.width - 20;
+          let line = '';
+          let lineY = 20;
+          const lineHeight = 32;
+          
+          for (let i = 0; i < words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            const metrics = ctx.measureText(testLine);
+            
+            if (metrics.width > maxWidth && i > 0) {
+              ctx.fillText(line, 10, lineY);
+              line = words[i] + ' ';
+              lineY += lineHeight;
+            } else {
+              line = testLine;
+            }
           }
-        }
+          
+          ctx.fillText(line, 10, lineY);
+        };
         
-        context.fillText(line, x, lineY);
+        // Initial drawing
+        drawText(textCtx, "Dialog text will appear here...");
+        
+        const textTexture = new THREE.CanvasTexture(textCanvas);
+        const textGeometry = new THREE.PlaneGeometry(0.4, 0.2);
+        const textMaterial = new THREE.MeshBasicMaterial({
+          map: textTexture,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+        
+        this.textElement = new THREE.Mesh(textGeometry, textMaterial);
+        this.textElement.position.set(0.04, 0.04, 0.001);
+        this.textElement.userData.updateText = (text) => {
+          drawText(textCtx, text);
+          textTexture.needsUpdate = true;
+        };
+        
+        panel.add(this.textElement);
       }
       
-      updateTextMesh(mesh, text, color = '#ffffff', animated = true) {
-        // Store the full text for animation
-        this.fullDialogText = text;
+      createNextButton(panel, panelWidth, panelHeight) {
+        // Create a nice looking next button
+        const buttonCanvas = document.createElement('canvas');
+        buttonCanvas.width = 128;
+        buttonCanvas.height = 128;
+        const buttonCtx = buttonCanvas.getContext('2d');
         
-        if (animated) {
-          // Start with empty text if animated
-          this.textRevealProgress = 0;
-          this.isAnimatingText = true;
-          this.updateTextWithProgress(mesh, '', 0);
-        } else {
-          // Update immediately if not animated
-          this.updateTextWithProgress(mesh, text, 1);
-          this.isAnimatingText = false;
-        }
-      }
-      
-      updateTextWithProgress(mesh, fullText, progress) {
-        // Get the canvas from the texture
-        const canvas = mesh.material.map.image;
-        const context = canvas.getContext('2d');
+        // Drawing function for button
+        const drawButton = (ctx, hover = false) => {
+          ctx.clearRect(0, 0, buttonCanvas.width, buttonCanvas.height);
+          
+          // Draw circle
+          ctx.beginPath();
+          ctx.arc(64, 64, 50, 0, 2 * Math.PI);
+          ctx.fillStyle = hover ? '#5993FF' : '#4876FF';
+          ctx.fill();
+          
+          // Add shadow/glow effect
+          ctx.shadowColor = 'rgba(72, 118, 255, 0.8)';
+          ctx.shadowBlur = 15;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          
+          // Draw arrow
+          ctx.beginPath();
+          ctx.moveTo(50, 44);
+          ctx.lineTo(80, 64);
+          ctx.lineTo(50, 84);
+          ctx.fillStyle = 'white';
+          ctx.fill();
+        };
         
-        // Clear canvas
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        // Initial drawing
+        drawButton(buttonCtx);
         
-        // Set font and color
-        context.font = 'normal 28px Arial';
-        context.fillStyle = '#ffffff';
-        context.textBaseline = 'top';
+        const buttonTexture = new THREE.CanvasTexture(buttonCanvas);
+        const buttonGeometry = new THREE.PlaneGeometry(0.05, 0.05);
+        const buttonMaterial = new THREE.MeshBasicMaterial({
+          map: buttonTexture,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
         
-        // If animating, show text up to current progress
-        let textToShow = fullText;
-        if (progress < 1 && this.fullDialogText) {
-          const charCount = Math.floor(this.fullDialogText.length * progress);
-          textToShow = this.fullDialogText.substring(0, charCount);
-        }
+        this.nextButton = new THREE.Mesh(buttonGeometry, buttonMaterial);
+        this.nextButton.position.set((panelWidth/2) - 0.05, -(panelHeight/2) + 0.05, 0.001);
         
-        // Draw text with word wrap
-        this.wrapText(context, textToShow, 10, 10, canvas.width - 20, 32);
+        // Make button interactive
+        this.nextButton.userData.onClick = () => {
+          this.showNextDialog();
+          
+          // Visual feedback
+          drawButton(buttonCtx, true);
+          buttonTexture.needsUpdate = true;
+          
+          setTimeout(() => {
+            drawButton(buttonCtx, false);
+            buttonTexture.needsUpdate = true;
+          }, 200);
+        };
         
-        // Update texture
-        mesh.material.map.needsUpdate = true;
-      }
-      
-      completeTextAnimation() {
-        // Show full text immediately
-        this.textRevealProgress = 1;
-        this.updateTextWithProgress(this.textMesh, this.fullDialogText, 1);
-        this.isAnimatingText = false;
+        panel.add(this.nextButton);
       }
       
       startDialogSequence() {
@@ -867,42 +708,12 @@
         const dialog = this.dialogSequence[this.currentDialogIndex];
         
         // Update portrait texture based on speaker
-        if (dialog.speaker === "Hero") {
-          this.portraitMesh.material.map = this.heroTexture;
-        } else {
-          this.portraitMesh.material.map = this.enemyTexture;
-        }
+        this.portraitMesh.material.map = dialog.speaker === "Hero" ? this.heroTexture : this.enemyTexture;
         this.portraitMesh.material.needsUpdate = true;
         
-        // Update border and nameplate color
-        this.portraitBorder.material.color.set(dialog.color);
-        this.namePlate.material.color.set(dialog.color);
-        
-        // Update name text
-        this.updateTextMesh(this.nameMesh, dialog.speaker, "#ffffff", false);
-        
-        // Update dialog text with animation
-        this.updateTextMesh(this.textMesh, dialog.message, "#ffffff", true);
-        
-        // Add subtle animation to the dialog panel
-        this.dialogPanel.scale.set(0.95, 0.95, 0.95);
-        this.dialogPanel.material.opacity = 0.1;
-        
-        // Animate to full size
-        const startTime = Date.now();
-        const animatePanelIn = () => {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(elapsed / 300, 1);
-          
-          const scale = 0.95 + (0.05 * progress);
-          this.dialogPanel.scale.set(scale, scale, scale);
-          
-          if (progress < 1) {
-            requestAnimationFrame(animatePanelIn);
-          }
-        };
-        
-        animatePanelIn();
+        // Update name and text
+        this.nameElement.userData.updateName(dialog.speaker, dialog.color);
+        this.textElement.userData.updateText(dialog.message);
       }
       
       showNextDialog() {
@@ -916,78 +727,28 @@
       
       endDialogSequence() {
         this.isActive = false;
+        this.dialogPanel.visible = false;
+        updateStatus("Dialog complete! Starting over in 3 seconds...");
         
-        // Animate panel out
-        const startTime = Date.now();
-        const animatePanelOut = () => {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(elapsed / 500, 1);
-          
-          const scale = 1 - (0.2 * progress);
-          this.dialogPanel.scale.set(scale, scale, scale);
-          
-          const opacity = 0.7 * (1 - progress);
-          this.dialogPanel.children[0].material.opacity = opacity;
-          
-          if (progress >= 1) {
-            this.dialogPanel.visible = false;
-            updateStatus("Dialog complete! Starting over in 3 seconds...");
-            
-            // Restart the sequence after a delay
-            setTimeout(() => {
-              this.startDialogSequence();
-            }, 3000);
-          } else {
-            requestAnimationFrame(animatePanelOut);
-          }
-        };
-        
-        animatePanelOut();
+        // Restart the sequence after a delay
+        setTimeout(() => {
+          this.startDialogSequence();
+        }, 3000);
       }
       
-      update() {
-        if (!this.isActive) return;
+      update(camera) {
+        if (!this.isActive || !this.dialogGroup || !camera) return;
         
-        // Keep dialog panel facing the camera
-        if (this.dialogGroup && this.camera) {
-          // Position dialog in front of camera
-          const cameraDirection = new THREE.Vector3(0, 0, -1);
-          cameraDirection.applyQuaternion(this.camera.quaternion);
-          cameraDirection.multiplyScalar(0.7); // Distance from camera
-          
-          this.dialogGroup.position.copy(this.camera.position).add(cameraDirection);
-          
-          // Make dialog face the camera
-          this.dialogGroup.lookAt(this.camera.position);
-          
-          // Adjust vertical position for better viewing angle
-          const currentY = this.camera.position.y;
-          this.dialogGroup.position.y = currentY - 0.05; // Slightly below eye level
-        }
+        // Position dialog in front of camera
+        const cameraDirection = new THREE.Vector3(0, 0, -1);
+        cameraDirection.applyQuaternion(camera.quaternion);
+        cameraDirection.multiplyScalar(0.7); // Distance from camera
         
-        // Animate text reveal if active
-        if (this.isAnimatingText) {
-          this.textRevealProgress += this.textRevealSpeed;
-          if (this.textRevealProgress >= 1) {
-            this.textRevealProgress = 1;
-            this.isAnimatingText = false;
-          }
-          this.updateTextWithProgress(this.textMesh, this.fullDialogText, this.textRevealProgress);
-        }
+        this.dialogGroup.position.copy(camera.position).add(cameraDirection);
+        this.dialogGroup.lookAt(camera.position);
         
-        // Animate next button
-        if (this.nextButton) {
-          this.nextButton.rotation.z += 0.01;
-          
-          // Add hover effect
-          if (this.nextButton.userData.isHovered) {
-            this.nextButton.scale.set(1.1, 1.1, 1.1);
-            this.nextButton.userData.isHovered = false;
-          } else {
-            // Return to normal size with smooth transition
-            this.nextButton.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
-          }
-        }
+        // Adjust vertical position
+        this.dialogGroup.position.y = camera.position.y - 0.1; // Slightly below eye level
       }
       
       getInteractiveObjects() {
